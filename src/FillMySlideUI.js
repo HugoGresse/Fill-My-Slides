@@ -5,6 +5,7 @@ import Button from "@material-ui/core/Button"
 import gapi from './gapi'
 import ShapeChooser from "./ShapeChooser"
 import withStyles from "@material-ui/core/styles/withStyles"
+import { serialPromise } from "./serialPromise"
 
 const styles = theme => ({
     textArea: {
@@ -42,9 +43,11 @@ class FillMySlideUI extends Component {
     }
 
     getTextShape = (slide) => {
+        this.setState({
+            pageObjectId: slide.objectId
+        })
         console.log(slide)
 
-        const textShape = []
         return slide.pageElements.filter(e => {
             if (!e.shape) return 0
             return e.shape.shapeType === "TEXT_BOX"
@@ -84,14 +87,58 @@ class FillMySlideUI extends Component {
 
     onReplacementDataChange(data) {
         this.setState({
-            replacementData: data
+            replacementData: JSON.parse(data)
         })
     }
 
     onGenerateClick() {
+        console.log(this.state)
+
+        const promises = []
+
+        this.state.replacementData.forEach(data => {
+            promises.push(gapi.client.slides.presentations.batchUpdate({
+                presentationId: this.state.presentationId,
+                requests: this.generateRequest(data)
+            }))
+
+            // noinspection JSDeprecatedSymbols
+            promises.push(gapi.client.slides.presentations.pages.getThumbnail({
+                "presentationId": this.state.presentationId,
+                "pageObjectId": this.state.pageObjectId,
+                "thumbnailProperties.mimeType": "PNG",
+                "thumbnailProperties.thumbnailSize": "LARGE"
+            }))
+        })
+
+        serialPromise(promises, status => {
+            console.log("position: " + status)
+        }).then(results => {
+            console.log("promise done", results)
+            results.forEach(result => {
+                if(result.contentUrl) {
+                    console.log(result.contentUrl)
+                }
+            })
+        })
+
+        /*
+        const requests = this.generateRequest();
+
+        gapi.client.slides.presentations.batchUpdate({
+            presentationId: this.state.presentationId,
+            requests: requests
+        }).then((batchUpdateResponse) => {
+            console.log(batchUpdateResponse)
+        });*/
+    }
+
+    generateRequest(data) {
         const requests = []
 
-        this.state.selectedShapes.forEach(shape => {
+        const keys = Object.keys(data)
+
+        this.state.selectedShapes.forEach((shape, index) => {
             requests.push({
                 deleteText: {
                     objectId: shape.objectId,
@@ -104,19 +151,12 @@ class FillMySlideUI extends Component {
                 insertText: {
                     objectId: shape.objectId,
                     insertionIndex: 0,
-                    text: "My New Text"
+                    text: data[keys[index]]
                 }
             })
         })
 
-        console.log(requests)
-
-        gapi.client.slides.presentations.batchUpdate({
-            presentationId: this.state.presentationId,
-            requests: requests
-        }).then((batchUpdateResponse) => {
-            console.log(batchUpdateResponse)
-        });
+        return requests
     }
 
     screenshot() {
@@ -128,7 +168,7 @@ class FillMySlideUI extends Component {
     }
 
     render() {
-        const { classes } = this.props
+        const {classes} = this.props
 
         return (
             <Grid container>
@@ -155,7 +195,7 @@ class FillMySlideUI extends Component {
                         multiline
                         rowsMax="20"
                         className={classes.textArea}
-                        onChange={(data) => this.onReplacementDataChange(data)}
+                        onChange={(data, value) => this.onReplacementDataChange(data.target.value)}
                         margin="normal"
                     />
                 </Grid>
