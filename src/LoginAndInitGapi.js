@@ -58,10 +58,10 @@ class LoginAndInitGapi extends Component {
 
         if (this.state.isSigned) {
             return <div>
-                {this.props.children}
                 <Button onClick={e => this.logout()}>
                     Logout
                 </Button>
+                {this.props.children}
             </div>
         }
 

@@ -16,7 +16,7 @@ const styles = theme => ({
         marginLeft: theme.spacing(2),
         marginRight: theme.spacing(2),
         [theme.breakpoints.up(600 + theme.spacing(2) * 2)]: {
-            width: 600,
+            width: 900,
             marginLeft: 'auto',
             marginRight: 'auto',
         },
@@ -56,7 +56,7 @@ class App extends Component {
                 <div className="App">
                     <CssBaseline/>
                     <Typography variant="h6" color="inherit" noWrap>
-                        Fill my slide
+                        Fill my slides
                     </Typography>
                     <main className={classes.layout}>
                         <FillMySlideUI/>

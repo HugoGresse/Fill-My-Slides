@@ -5,9 +5,35 @@ import Button from "@material-ui/core/Button"
 import gapi from './gapi'
 import ShapeChooser from "./ShapeChooser"
 import withStyles from "@material-ui/core/styles/withStyles"
-import { serialPromise } from "./serialPromise"
+import { Typography } from "@material-ui/core"
+import Paper from "@material-ui/core/Paper"
+import { generateScreenshots } from "./ScreenshotsProcess"
+import CircularProgress from "@material-ui/core/CircularProgress"
 
 const styles = theme => ({
+    card: {
+        padding: 20,
+        textAlign: 'left'
+    },
+    numberContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    number: {
+        fontSize: 16,
+        width: 40,
+        height: 40,
+        lineHeight: "40px",
+        background: "#8888FF",
+        color: "#fff",
+        borderRadius: 20
+    },
+    previewContainer: {
+        border: '1px solid #eee',
+        borderRadius: 5,
+        padding: 5
+    },
     textArea: {
         width: '100%'
     }
@@ -19,35 +45,75 @@ class FillMySlideUI extends Component {
         super(props)
 
         this.state = {
-            presentationId: "1oA1-goIekTarbBHI9Vbzks8hVanXApOxd3Bbk-GIuII",
+            presentationId: null,
             textShapes: []
         }
     }
 
-    onFetchClick() {
+    onPresentationLinkChange(e) {
+        const value = e.target.value
+
+        if (!value.startsWith("https://docs.google.com")) {
+            this.setState({
+                error: "Presentation URL not valid"
+            })
+            return
+        }
+
+        const id = value.substring(
+            value.lastIndexOf("presentation/d/") + "presentation/d/".length,
+            value.lastIndexOf("/edit")
+        );
+
+        this.setState({
+            presentationId: id
+        })
+
+        this.fetchSlides(id)
+    }
+
+    fetchSlides(presentationId) {
         gapi.client.slides.presentations.get({
-            presentationId: this.state.presentationId
+            presentationId: presentationId
         }).then((response) => {
             if (!response.result.slides || response.result.slides.length === 0) {
                 this.setState({
                     error: "No slide in this presentation"
                 })
             }
+            const firstSlide = response.result.slides[0]
             this.setState({
-                textShapes: this.getTextShape(response.result.slides[0])
+                slideTitle: response.result.title,
+                pageObjectId: firstSlide.objectId,
+                textShapes: this.getTextShape(firstSlide)
             })
+            this.getReferenceThumbnail(this.state.presentationId, firstSlide.objectId)
         }, (response) => {
             console.error(response)
         });
+    }
 
+    getReferenceThumbnail(presentationId, pageObjectId) {
+        // noinspection JSDeprecatedSymbols
+        gapi.client.slides.presentations.pages.getThumbnail({
+            "presentationId": presentationId,
+            "pageObjectId": pageObjectId,
+            "thumbnailProperties.mimeType": "PNG",
+            "thumbnailProperties.thumbnailSize": "SMALL"
+        }).then(response => {
+            if (response.status !== 200) {
+                this.setState({
+                    error: "Failed to get reference screenshots: " + JSON.stringify(response.statusText)
+                })
+                return
+            }
+            this.setState({
+                referenceThumbnail: response.result.contentUrl,
+            })
+        })
     }
 
     getTextShape = (slide) => {
-        this.setState({
-            pageObjectId: slide.objectId
-        })
-        console.log(slide)
-
         return slide.pageElements.filter(e => {
             if (!e.shape) return 0
             return e.shape.shapeType === "TEXT_BOX"
@@ -65,146 +131,167 @@ class FillMySlideUI extends Component {
         })
     }
 
-    onPresentationLinkChange(e) {
-        const value = e.target.value
-        const id = value.substring(
-            value.lastIndexOf("presentation/d/") + "presentation/d/".length,
-            value.lastIndexOf("/edit")
-        );
-
-        this.setState({
-            presentationId: id
-        })
-        console.log(id)
-    }
-
     selectedShapes(data) {
         this.setState({
             selectedShapes: data
         })
-        console.log(data)
     }
 
     onReplacementDataChange(data) {
+        const replacementData = JSON.parse(data)
         this.setState({
-            replacementData: JSON.parse(data)
+            replacementData: replacementData,
+            totalItems: replacementData.length
         })
     }
 
     onGenerateClick() {
-        console.log(this.state)
+        const state = this.state
+        generateScreenshots(
+            state.presentationId,
+            state.pageObjectId,
+            state.replacementData,
+            state.selectedShapes,
+            (progress) => {
+                this.setState({
+                    progress: progress
+                })
+            },
+            (result) => {
 
-        const promises = []
-
-        this.state.replacementData.forEach(data => {
-            promises.push(gapi.client.slides.presentations.batchUpdate({
-                presentationId: this.state.presentationId,
-                requests: this.generateRequest(data)
-            }))
-
-            // noinspection JSDeprecatedSymbols
-            promises.push(gapi.client.slides.presentations.pages.getThumbnail({
-                "presentationId": this.state.presentationId,
-                "pageObjectId": this.state.pageObjectId,
-                "thumbnailProperties.mimeType": "PNG",
-                "thumbnailProperties.thumbnailSize": "LARGE"
-            }))
-        })
-
-        serialPromise(promises, status => {
-            console.log("position: " + status)
-        }).then(results => {
-            console.log("promise done", results)
-            results.forEach(result => {
-                if(result.contentUrl) {
-                    console.log(result.contentUrl)
-                }
             })
-        })
-
-        /*
-        const requests = this.generateRequest();
-
-        gapi.client.slides.presentations.batchUpdate({
-            presentationId: this.state.presentationId,
-            requests: requests
-        }).then((batchUpdateResponse) => {
-            console.log(batchUpdateResponse)
-        });*/
-    }
-
-    generateRequest(data) {
-        const requests = []
-
-        const keys = Object.keys(data)
-
-        this.state.selectedShapes.forEach((shape, index) => {
-            requests.push({
-                deleteText: {
-                    objectId: shape.objectId,
-                    textRange: {
-                        type: 'ALL'
-                    }
-                }
-            })
-            requests.push({
-                insertText: {
-                    objectId: shape.objectId,
-                    insertionIndex: 0,
-                    text: data[keys[index]]
-                }
-            })
-        })
-
-        return requests
-    }
-
-    screenshot() {
-        // noinspection JSDeprecatedSymbols
-        return gapi.client.slides.presentations.pages.getThumbnail({
-            "thumbnailProperties.mimeType": "PNG",
-            "thumbnailProperties.thumbnailSize": "LARGE"
-        })
     }
 
     render() {
         const {classes} = this.props
 
+        const generateButtonDisable = this.state.progress > 0
+
         return (
-            <Grid container>
-                <Grid item xs={6}>
-                    <TextField
-                        required
-                        id="presentation url"
-                        name="Presentation URL"
-                        label="Presentation URL"
-                        fullWidth
-                        onChange={e => this.onPresentationLinkChange(e)}
-                    />
+            <Grid container spacing={1}>
+                <Grid item xs={1} className={classes.numberContainer}>
+                    <div className={classes.number}>1</div>
                 </Grid>
-                <Grid item xs={6}>
-                    <ShapeChooser
-                        shapes={this.state.textShapes}
-                        onShapeSelected={(selectedShapes) => this.selectedShapes(selectedShapes)}/>
+                <Grid item xs={11}>
+
+                    <Paper className={classes.card}>
+                        <Grid container>
+                            <Grid item xs={12}>
+                                <Typography>
+                                    Fill your presentation URL
+                                </Typography>
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <TextField
+                                    autoFocus
+                                    required
+                                    id="presentation url"
+                                    name="Presentation URL"
+                                    label="Presentation URL"
+                                    fullWidth
+                                    value="https://docs.google.com/presentation/d/1oA1-goIekTarbBHI9Vbzks8hVanXApOxd3Bbk-GIuII/edit#slide=id.p"
+                                    onChange={e => this.onPresentationLinkChange(e)}
+                                />
+                            </Grid>
+                        </Grid>
+                    </Paper>
+
                 </Grid>
 
-                <Grid item xs={12}>
-                    <TextField
-                        id="replacementData"
-                        label="Multiline"
-                        multiline
-                        rowsMax="20"
-                        className={classes.textArea}
-                        onChange={(data, value) => this.onReplacementDataChange(data.target.value)}
-                        margin="normal"
-                    />
+                <Grid item xs={1} className={classes.numberContainer}>
+                    <div className={classes.number}>2</div>
                 </Grid>
-                <Grid item xs={12}>
-                    <Button onClick={() => this.onFetchClick()}>1. Fetch</Button><br/>
-                    2. Fill the replacementData<br/>
-                    <Button variant="contained" onClick={() => this.onGenerateClick()}>3. Generate</Button><br/>
+
+                <Grid item xs={11}>
+
+                    <Paper className={classes.card}>
+                        <Typography>
+                            Select your text you want to replace
+                        </Typography>
+                        <Typography variant="caption">
+                            (the order you select them are important)
+                        </Typography>
+
+                        <Grid container>
+                            <Grid item xs={6}>
+                                <ShapeChooser
+                                    shapes={this.state.textShapes}
+                                    onShapeSelected={(selectedShapes) => this.selectedShapes(selectedShapes)}/>
+                            </Grid>
+                            <Grid item xs={6}>
+                                {this.state.slideTitle && <div className={classes.previewContainer}>
+                                    <Typography>{this.state.slideTitle}</Typography>
+                                    {this.state.referenceThumbnail &&
+                                    <img src={this.state.referenceThumbnail} alt="Slide preview"/>}
+                                </div>}
+                            </Grid>
+                        </Grid>
+                    </Paper>
                 </Grid>
-                <Grid item xs={12}>
+
+
+                <Grid item xs={1} className={classes.numberContainer}>
+                    <div className={classes.number}>3</div>
+                </Grid>
+                <Grid item xs={11}>
+                    <Paper className={classes.card}>
+                        <Typography>
+                            Paste your data here
+                        </Typography>
+                        <Typography variant="caption">
+                            {JSON.stringify([{
+                                key1: "value1",
+                                key2: "value2"
+                            }, {
+                                key1: "value3",
+                                key2: "value4"
+                            }, {
+                                "...": "..."
+                            }], null, 4)}
+                        </Typography>
+
+                        <TextField
+                            id="replacementData"
+                            label="Multiline"
+                            multiline
+                            rows="5"
+                            rowsMax="20"
+                            className={classes.textArea}
+                            onChange={(data, value) => this.onReplacementDataChange(data.target.value)}
+                            margin="normal"
+                        />
+                    </Paper>
+                </Grid>
+
+
+                <Grid item xs={1} className={classes.numberContainer}>
+                    <div className={classes.number}>3</div>
+                </Grid>
+                <Grid item xs={11}>
+
+                    {this.state.error && <Grid item xs={12}>
+                        <Typography>{this.state.error}</Typography>
+                    </Grid>}
+                    {!this.state.error && <Paper className={classes.card}>
+
+                        <Button disable={(this.state.progress > 0).toString()}
+                                variant="contained"
+                                onClick={() => this.onGenerateClick()}>
+                            Generate
+                        </Button>
+
+                        <br/>
+                        <br/>
+                        <br/>
+
+                        {this.state.progress > 0 && this.state.progress < this.state.totalItems && <div>
+                            <CircularProgress/>
+                            Progress: {this.state.progress / 2} / {this.state.totalItems}
+                        </div>}
+
+                    </Paper>}
+
                 </Grid>
             </Grid>
         );
