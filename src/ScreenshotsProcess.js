@@ -28,13 +28,16 @@ export const generateScreenshots = (presentationId,
 
     serialPromise(promises, status => {
         callbacksProgress(status)
-    }).then(results => {
-        console.log("promise done", results)
-        results.forEach(result => {
+    }).then(responses => {
+        const images = []
+        console.log("promise done", responses)
+        responses.forEach(result => {
             if (result.result.contentUrl) {
-                console.log(result.result.contentUrl)
+                images.push(result.result.contentUrl)
             }
         })
+
+        callbacksDone(images)
     })
 }
 

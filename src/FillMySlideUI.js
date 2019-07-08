@@ -48,6 +48,14 @@ class FillMySlideUI extends Component {
             presentationId: null,
             textShapes: []
         }
+
+        setTimeout(() => {
+            this.setState({
+                presentationId: "1oA1-goIekTarbBHI9Vbzks8hVanXApOxd3Bbk-GIuII",
+            })
+            this.fetchSlides("1oA1-goIekTarbBHI9Vbzks8hVanXApOxd3Bbk-GIuII")
+            this.onReplacementDataChange("[{\"title\":\"Redux: c'est compliqué de faire simple\",\"speakers\":\"Fabien Bernard\"},{\"title\":\"Le processus de boot: Une histoire moderne de l'informatique \",\"speakers\":\"Samuel Ortiz\"},{\"title\":\"Entre industrialisation et artisanat, le métier de développeur\",\"speakers\":\"Arnaud LEMAIRE\"}]")
+        }, 300)
     }
 
     onPresentationLinkChange(e) {
@@ -158,14 +166,15 @@ class FillMySlideUI extends Component {
                 })
             },
             (result) => {
-
+                this.setState({
+                    progress: 0,
+                    zipUrl: "TODO"
+                })
             })
     }
 
     render() {
         const {classes} = this.props
-
-        const generateButtonDisable = this.state.progress > 0
 
         return (
             <Grid container spacing={1}>
@@ -190,7 +199,6 @@ class FillMySlideUI extends Component {
                                     name="Presentation URL"
                                     label="Presentation URL"
                                     fullWidth
-                                    value="https://docs.google.com/presentation/d/1oA1-goIekTarbBHI9Vbzks8hVanXApOxd3Bbk-GIuII/edit#slide=id.p"
                                     onChange={e => this.onPresentationLinkChange(e)}
                                 />
                             </Grid>
@@ -285,8 +293,8 @@ class FillMySlideUI extends Component {
                         <br/>
                         <br/>
 
-                        {this.state.progress > 0 && this.state.progress < this.state.totalItems && <div>
-                            <CircularProgress/>
+                        {this.state.progress > 0 && <div>
+                            <CircularProgress variant="static" value={100 * (this.state.progress / 2) / this.state.totalItems }/>
                             Progress: {this.state.progress / 2} / {this.state.totalItems}
                         </div>}
 
