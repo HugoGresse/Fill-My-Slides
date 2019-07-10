@@ -1,16 +1,8 @@
 import React, { Component } from 'react';
 import './fillmyslides/FillMySlidesApp.css';
-import CssBaseline from "@material-ui/core/CssBaseline"
 import Typography from "@material-ui/core/Typography"
-import FillMySlideUI from "./fillmyslides/FillMySlideUI"
 import withStyles from "@material-ui/core/styles/withStyles"
-import LoginAndInitGapi from "./fillmyslides/LoginAndInitGapi"
-import { Router } from "react-router-dom"
 import Container from "@material-ui/core/Container"
-import Grid from "@material-ui/core/Grid"
-import Button from "@material-ui/core/Button"
-import Link from "@material-ui/core/Link"
-
 
 const styles = theme => ({
     heroContent: {
@@ -73,7 +65,7 @@ This website is provided by Hugo Gresse, an individual living in Montpellier, Fr
                         <Typography color="textSecondary" paragraph>
                             By using this service, you are required to provide us with information that may identify you directly or indirectly. We collect the minimum information required to achieve the purposes set out in this Policy. To benefit from this service, you need to login using Google Authentification & allow this services to access Google Presentation & Drive. <br/><br/>
 
-                            To learn more about the data to which Google may have access and how they use them, please refer to the <a href="https://www.google.com/policies/privacy/" target="_blank">Privacy Policy of Google</a>.<br/><br/>
+                            To learn more about the data to which Google may have access and how they use them, please refer to the <a rel="noopener noreferrer"  href="https://www.google.com/policies/privacy/" target="_blank">Privacy Policy of Google</a>.<br/><br/>
 
                             When you use our service, we also collect your log data such as:<br/><br/>
 

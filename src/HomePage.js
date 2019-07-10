@@ -1,16 +1,11 @@
 import React, { Component } from 'react';
 import './fillmyslides/FillMySlidesApp.css';
-import CssBaseline from "@material-ui/core/CssBaseline"
 import Typography from "@material-ui/core/Typography"
-import FillMySlideUI from "./fillmyslides/FillMySlideUI"
 import withStyles from "@material-ui/core/styles/withStyles"
-import LoginAndInitGapi from "./fillmyslides/LoginAndInitGapi"
-import { Router } from "react-router-dom"
 import Container from "@material-ui/core/Container"
 import Grid from "@material-ui/core/Grid"
 import Button from "@material-ui/core/Button"
-import Link from "@material-ui/core/Link"
-
+import { Link } from "react-router-dom"
 
 const styles = theme => ({
     heroContent: {
@@ -19,6 +14,9 @@ const styles = theme => ({
     },
     heroButtons: {
         marginTop: theme.spacing(4),
+        "& a": {
+            textDecoration: "none"
+        }
     },
     cardGrid: {
         paddingTop: theme.spacing(8),
@@ -62,9 +60,11 @@ class HomePage extends Component {
                         <div className={classes.heroButtons}>
                             <Grid container spacing={2} justify="center">
                                 <Grid item>
-                                    <Button variant="contained" color="secondary">
-                                        Open App
-                                    </Button>
+                                    <Link to="/app">
+                                        <Button variant="contained" color="secondary">
+                                            Open App
+                                        </Button>
+                                    </Link>
                                 </Grid>
                             </Grid>
                         </div>
