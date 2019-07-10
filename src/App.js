@@ -42,6 +42,9 @@ const styles = theme => ({
         marginTop: theme.spacing(3),
         marginLeft: theme.spacing(1),
     },
+    description: {
+        padding: 40
+    }
 });
 
 class App extends Component {
@@ -57,6 +60,10 @@ class App extends Component {
                     <CssBaseline/>
                     <Typography variant="h6" color="inherit" noWrap>
                         Fill my slides
+                    </Typography>
+                    <Typography color="inherit" className={classes.description}>
+                        This will generate images (as many as you want) of the first slide of the given presentation filled with your data.
+                        It will change the content of your slide to do so.
                     </Typography>
                     <main className={classes.layout}>
                         <FillMySlideUI/>

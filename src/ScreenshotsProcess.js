@@ -1,5 +1,8 @@
 import gapi from "./gapi"
 import { serialPromise } from "./serialPromise"
+import * as JSZipUtils from "jszip-utils"
+import { saveAs } from "file-saver"
+import * as JSZip from "jszip"
 
 
 export const generateScreenshots = (presentationId,
@@ -7,7 +10,8 @@ export const generateScreenshots = (presentationId,
                                     replacementData,
                                     selectedShapes,
                                     callbacksProgress,
-                                    callbacksDone) => {
+                                    callbacksScreenshotsDone,
+                                    callbacksZipping) => {
     const promises = []
 
     replacementData.forEach(data => {
@@ -30,14 +34,18 @@ export const generateScreenshots = (presentationId,
         callbacksProgress(status)
     }).then(responses => {
         const images = []
-        console.log("promise done", responses)
         responses.forEach(result => {
             if (result.result.contentUrl) {
                 images.push(result.result.contentUrl)
             }
         })
 
-        callbacksDone(images)
+        callbacksScreenshotsDone(images)
+        return images
+    }).then(images => {
+        return generateZip(new JSZip(), images, (inProgress) => {
+            callbacksZipping(inProgress)
+        })
     })
 }
 
@@ -66,4 +74,40 @@ const generateRequest = (selectedShapes, data) => {
     })
 
     return requests
+}
+
+const generateZip = (zip, urls, progression) => {
+    return new Promise((resolve, reject) => {
+        urls.forEach((url, index) => {
+            zip.file(index + ".png", urlToPromise(url), {binary: true});
+        })
+
+        progression(true)
+
+        // when everything has been downloaded, we can trigger the dl
+        zip.generateAsync({type: "blob"}, (metadata) => {
+            progression(true)
+        }).then((blob) => {
+            saveAs(blob, "images-fillmyslides" + new Date().toISOString() + ".zip");
+            progression(false)
+            resolve()
+        }, (e) => {
+            progression(false)
+            reject(e)
+        });
+    })
+
+}
+
+
+function urlToPromise(url) {
+    return new Promise((resolve, reject) => {
+        return JSZipUtils.getBinaryContent(url, (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        });
+    });
 }

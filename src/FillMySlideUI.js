@@ -36,6 +36,21 @@ const styles = theme => ({
     },
     textArea: {
         width: '100%'
+    },
+    lastBlock: {
+        marginBottom: 40
+    },
+    progressContainer: {
+        display: "flex",
+        alignItems: "center",
+        "& > div": {
+
+            display: "flex",
+            alignItems: "center",
+            "& > p": {
+                marginLeft: 10
+            }
+        }
     }
 })
 
@@ -48,14 +63,6 @@ class FillMySlideUI extends Component {
             presentationId: null,
             textShapes: []
         }
-
-        setTimeout(() => {
-            this.setState({
-                presentationId: "1oA1-goIekTarbBHI9Vbzks8hVanXApOxd3Bbk-GIuII",
-            })
-            this.fetchSlides("1oA1-goIekTarbBHI9Vbzks8hVanXApOxd3Bbk-GIuII")
-            this.onReplacementDataChange("[{\"title\":\"Redux: c'est compliqué de faire simple\",\"speakers\":\"Fabien Bernard\"},{\"title\":\"Le processus de boot: Une histoire moderne de l'informatique \",\"speakers\":\"Samuel Ortiz\"},{\"title\":\"Entre industrialisation et artisanat, le métier de développeur\",\"speakers\":\"Arnaud LEMAIRE\"}]")
-        }, 300)
     }
 
     onPresentationLinkChange(e) {
@@ -154,6 +161,26 @@ class FillMySlideUI extends Component {
     }
 
     onGenerateClick() {
+        if (!this.state.replacementData) {
+            this.setState({
+                error: "No json"
+            })
+            return
+        }
+        if (!this.state.presentationId) {
+            this.setState({
+                error: "No presentation"
+            })
+            return
+        }
+        if (!this.state.selectedShapes) {
+            this.setState({
+                error: "No selected text to be replaced"
+            })
+            return
+        }
+
+
         const state = this.state
         generateScreenshots(
             state.presentationId,
@@ -168,7 +195,11 @@ class FillMySlideUI extends Component {
             (result) => {
                 this.setState({
                     progress: 0,
-                    zipUrl: "TODO"
+                })
+            },
+            (inProgress) => {
+                this.setState({
+                    zipProgress: inProgress
                 })
             })
     }
@@ -177,7 +208,7 @@ class FillMySlideUI extends Component {
         const {classes} = this.props
 
         return (
-            <Grid container spacing={1}>
+            <Grid container spacing={1} className={classes.lastBlock}>
                 <Grid item xs={1} className={classes.numberContainer}>
                     <div className={classes.number}>1</div>
                 </Grid>
@@ -261,7 +292,7 @@ class FillMySlideUI extends Component {
 
                         <TextField
                             id="replacementData"
-                            label="Multiline"
+                            label="json"
                             multiline
                             rows="5"
                             rowsMax="20"
@@ -272,34 +303,44 @@ class FillMySlideUI extends Component {
                     </Paper>
                 </Grid>
 
+                <Grid item xs={12}>
+                    {this.state.error && <Grid item xs={12}>
+                        <Paper className={classes.card}>
+                            <Typography>{this.state.error}</Typography>
+                        </Paper>
+                    </Grid>}
+                </Grid>
 
                 <Grid item xs={1} className={classes.numberContainer}>
                     <div className={classes.number}>3</div>
                 </Grid>
-                <Grid item xs={11}>
+                <Grid item xs={11} >
+                    <Paper className={classes.card}>
+                        <Grid container>
 
-                    {this.state.error && <Grid item xs={12}>
-                        <Typography>{this.state.error}</Typography>
-                    </Grid>}
-                    {!this.state.error && <Paper className={classes.card}>
+                            <Grid item xs={4}>
+                                <Button disable={(this.state.progress > 0).toString()}
+                                        variant="contained"
+                                        onClick={() => this.onGenerateClick()}>
+                                    Generate
+                                </Button>
+                            </Grid>
 
-                        <Button disable={(this.state.progress > 0).toString()}
-                                variant="contained"
-                                onClick={() => this.onGenerateClick()}>
-                            Generate
-                        </Button>
+                            <Grid item xs={8} className={classes.progressContainer}>
+                                {this.state.progress > 0 && <div>
+                                    <CircularProgress variant="static"
+                                                      value={100 * (this.state.progress / 2) / this.state.totalItems}/>
+                                    <Typography>
+                                        {this.state.progress / 2} / {this.state.totalItems}
+                                    </Typography>
+                                </div>}
 
-                        <br/>
-                        <br/>
-                        <br/>
-
-                        {this.state.progress > 0 && <div>
-                            <CircularProgress variant="static" value={100 * (this.state.progress / 2) / this.state.totalItems }/>
-                            Progress: {this.state.progress / 2} / {this.state.totalItems}
-                        </div>}
-
-                    </Paper>}
-
+                                {this.state.zipProgress && <Typography>
+                                    Zipping...
+                                </Typography>}
+                            </Grid>
+                        </Grid>
+                    </Paper>
                 </Grid>
             </Grid>
         );
