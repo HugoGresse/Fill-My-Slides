@@ -29,3 +29,5 @@ yarn-error.log*
 
 # Firebase specific
 .firebase
+
+src/credentials.json

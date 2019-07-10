@@ -1,78 +1,31 @@
 import React, { Component } from 'react';
-import './App.css';
+import { Switch, Route, BrowserRouter as Router, } from "react-router-dom"
+import FillMySlidesApp from "./fillmyslides/FillMySlidesApp"
+import HomePage from "./HomePage"
 import CssBaseline from "@material-ui/core/CssBaseline"
-import Typography from "@material-ui/core/Typography"
-import FillMySlideUI from "./FillMySlideUI"
-import withStyles from "@material-ui/core/styles/withStyles"
-import LoginAndInitGapi from "./LoginAndInitGapi"
-
-
-const styles = theme => ({
-    appBar: {
-        position: 'relative',
-    },
-    layout: {
-        width: 'auto',
-        marginLeft: theme.spacing(2),
-        marginRight: theme.spacing(2),
-        [theme.breakpoints.up(600 + theme.spacing(2) * 2)]: {
-            width: 900,
-            marginLeft: 'auto',
-            marginRight: 'auto',
-        },
-    },
-    paper: {
-        marginTop: theme.spacing(3),
-        marginBottom: theme.spacing(3),
-        padding: theme.spacing(2),
-        [theme.breakpoints.up(600 + theme.spacing(3) * 2)]: {
-            marginTop: theme.spacing(6),
-            marginBottom: theme.spacing(6),
-            padding: theme.spacing(3),
-        },
-    },
-    stepper: {
-        padding: theme.spacing(3, 0, 5),
-    },
-    buttons: {
-        display: 'flex',
-        justifyContent: 'flex-end',
-    },
-    button: {
-        marginTop: theme.spacing(3),
-        marginLeft: theme.spacing(1),
-    },
-    description: {
-        padding: 40
-    }
-});
+import Header from "./layout/Header"
+import Footer from "./Footer"
+import PrivacyRules from "./PrivacyPolicy"
 
 class App extends Component {
 
-
     render() {
-        const {classes} = this.props
-
-
         return (
-            <LoginAndInitGapi>
-                <div className="App">
-                    <CssBaseline/>
-                    <Typography variant="h6" color="inherit" noWrap>
-                        Fill my slides
-                    </Typography>
-                    <Typography color="inherit" className={classes.description}>
-                        This will generate images (as many as you want) of the first slide of the given presentation filled with your data.
-                        It will change the content of your slide to do so.
-                    </Typography>
-                    <main className={classes.layout}>
-                        <FillMySlideUI/>
-                    </main>
+            <Router>
+                <CssBaseline/>
+                <Header/>
+                <div>
+                    <Switch>
+                        <Route path="/" exact component={HomePage} />
+                        <Route path="/app/" component={FillMySlidesApp} />
+                        <Route path="/privacy" component={PrivacyRules} />
+                        <Route path="/" component={HomePage} />
+                    </Switch>
                 </div>
-            </LoginAndInitGapi>
+                <Footer/>
+            </Router>
         );
-
     }
 }
 
-export default withStyles(styles)(App);
+export default (App);

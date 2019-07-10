@@ -1,4 +1,4 @@
-import gapi from "./gapi"
+import gapi from "../gapi"
 import { serialPromise } from "./serialPromise"
 import * as JSZipUtils from "jszip-utils"
 import { saveAs } from "file-saver"

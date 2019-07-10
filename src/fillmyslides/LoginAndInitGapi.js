@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import './App.css';
+import './FillMySlidesApp.css';
 import Button from "@material-ui/core/Button"
+import credentials from "../credentials"
 
 class LoginAndInitGapi extends Component {
 
@@ -17,12 +18,7 @@ class LoginAndInitGapi extends Component {
         window.onGapiLoad = () => {
 
             const onAuthApiLoad = () => {
-                window.gapi.client.init({
-                    'apiKey': 'AIzaSyAtf6e952e74ZjumuoHE0sQZRsv8bvOMoI',
-                    'discoveryDocs': ["https://slides.googleapis.com/$discovery/rest?version=v1"],
-                    'clientId': '427996423082-8j6vg3vos6bc6erkg6at45aotllu713n.apps.googleusercontent.com',
-                    'scope': 'https://www.googleapis.com/auth/presentations'
-                }).then(GoogleAuth => {
+                window.gapi.client.init(credentials).then(GoogleAuth => {
                     window.gapi.auth2.getAuthInstance().isSignedIn.listen((isSignedIn) => this.signInResult(isSignedIn));
                     this.signInResult(window.gapi.auth2.getAuthInstance().isSignedIn.get());
                 });
@@ -66,7 +62,7 @@ class LoginAndInitGapi extends Component {
         }
 
         return (
-            <div className="App">
+            <div className="App"><br/><br/>
                 <Button onClick={e => this.signIn()}>
                     Sign in
                 </Button>

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Grid from "@material-ui/core/Grid"
 import TextField from "@material-ui/core/TextField"
 import Button from "@material-ui/core/Button"
-import gapi from './gapi'
+import gapi from '../gapi'
 import ShapeChooser from "./ShapeChooser"
 import withStyles from "@material-ui/core/styles/withStyles"
 import { Typography } from "@material-ui/core"
