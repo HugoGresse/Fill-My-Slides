@@ -3,6 +3,7 @@ import { serialPromise } from "./serialPromise"
 import * as JSZipUtils from "jszip-utils"
 import { saveAs } from "file-saver"
 import * as JSZip from "jszip"
+import { trackNumberOfGeneratedSlides } from "../tracking/track"
 
 
 export const generateScreenshots = (presentationId,
@@ -90,6 +91,7 @@ const generateZip = (zip, urls, progression) => {
         }).then((blob) => {
             saveAs(blob, "images-fillmyslides" + new Date().toISOString() + ".zip");
             progression(false)
+            trackNumberOfGeneratedSlides(urls.length)
             resolve()
         }, (e) => {
             progression(false)

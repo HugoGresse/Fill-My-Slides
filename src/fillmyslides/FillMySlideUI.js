@@ -312,7 +312,7 @@ class FillMySlideUI extends Component {
                 </Grid>
 
                 <Grid item xs={1} className={classes.numberContainer}>
-                    <div className={classes.number}>3</div>
+                    <div className={classes.number}>4</div>
                 </Grid>
                 <Grid item xs={11} >
                     <Paper className={classes.card}>

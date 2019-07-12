@@ -69,9 +69,9 @@ This website is provided by Hugo Gresse, an individual living in Montpellier, Fr
 
                             When you use our service, we also collect your log data such as:<br/><br/>
 
-                            - The number of images generated><br/>
-                            - Your user ID provided by Google login><br/>
-                            - the number of user using the service><br/>
+                            - The number of images generated<br/>
+                            - Your user ID provided by Google login<br/>
+                            - the number of user using the service<br/>
                             - access to your presentation with write access (to update text inside those before generating the images)<br/><br/><br/>
 
                             The following data are only collected by Google and not used by the service:<br/>
