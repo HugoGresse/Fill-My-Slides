@@ -39,7 +39,7 @@ class ShapeChooser extends Component {
                                     color="primary"
                                 />
                             }
-                            label={shape.text}
+                            label={shape.text ? shape.text : <img src={shape.imageUrl} width="50"/>}
                         />
                     </Grid>
                 })}

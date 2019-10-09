@@ -1,24 +1,30 @@
-import gapi from "../gapi"
-import { serialPromise } from "./serialPromise"
+import gapi from "../../gapi"
+import {serialPromise} from "./serialPromise"
 import * as JSZipUtils from "jszip-utils"
-import { saveAs } from "file-saver"
+import {saveAs} from "file-saver"
 import * as JSZip from "jszip"
-import { trackNumberOfGeneratedSlides } from "../tracking/track"
+import {trackNumberOfGeneratedSlides} from "../../tracking/track"
 
 
 export const generateScreenshots = (presentationId,
                                     pageObjectId,
                                     replacementData,
-                                    selectedShapes,
+                                    selectedTextShapes,
+                                    selectedImageShapes,
                                     callbacksProgress,
                                     callbacksScreenshotsDone,
                                     callbacksZipping) => {
     const promises = []
 
     replacementData.forEach(data => {
+        const imageValues = Object.values(data).filter(value => value.startsWith("http://") || value.startsWith("https://"))
+        const textValues = Object.values(data).filter(value => !value.startsWith("http://") && !value.startsWith("https://"))
+
+        const requests = [...generateImageRequest(selectedImageShapes, imageValues), ...generateTextRequest(selectedTextShapes, textValues)]
+
         promises.push(gapi.client.slides.presentations.batchUpdate({
             presentationId: presentationId,
-            requests: generateRequest(selectedShapes, data)
+            requests: requests
         }))
 
         // noinspection JSDeprecatedSymbols
@@ -29,7 +35,6 @@ export const generateScreenshots = (presentationId,
             "thumbnailProperties.thumbnailSize": "LARGE"
         }))
     })
-
 
     serialPromise(promises, status => {
         callbacksProgress(status)
@@ -51,12 +56,14 @@ export const generateScreenshots = (presentationId,
 }
 
 
-const generateRequest = (selectedShapes, data) => {
+const generateTextRequest = (selectedTextShapes, data) => {
     const requests = []
+
+    if (!selectedTextShapes) return requests
 
     const keys = Object.keys(data)
 
-    selectedShapes.forEach((shape, index) => {
+    selectedTextShapes.forEach((shape, index) => {
         requests.push({
             deleteText: {
                 objectId: shape.objectId,
@@ -77,10 +84,30 @@ const generateRequest = (selectedShapes, data) => {
     return requests
 }
 
+const generateImageRequest = (selectedImageShape, data) => {
+    const requests = []
+
+    if (!selectedImageShape) return requests
+
+    const keys = Object.keys(data)
+
+    selectedImageShape.forEach((shape, index) => {
+        requests.push({
+            replaceImage: {
+                imageObjectId: shape.objectId,
+                imageReplaceMethod: 'CENTER_INSIDE',
+                url: data[keys[index]]
+            }
+        })
+    })
+
+    return requests
+}
+
 const generateZip = (zip, urls, progression) => {
     return new Promise((resolve, reject) => {
         urls.forEach((url, index) => {
-            zip.file(index + ".png", urlToPromise(url), {binary: true});
+            zip.file(index + ".png", urlToPromise(url), {binary: true})
         })
 
         progression(true)
@@ -89,14 +116,14 @@ const generateZip = (zip, urls, progression) => {
         zip.generateAsync({type: "blob"}, (metadata) => {
             progression(true)
         }).then((blob) => {
-            saveAs(blob, "images-fillmyslides" + new Date().toISOString() + ".zip");
+            saveAs(blob, "images-fillmyslides" + new Date().toISOString() + ".zip")
             progression(false)
             trackNumberOfGeneratedSlides(urls.length)
             resolve()
         }, (e) => {
             progression(false)
             reject(e)
-        });
+        })
     })
 
 }
@@ -106,10 +133,10 @@ function urlToPromise(url) {
     return new Promise((resolve, reject) => {
         return JSZipUtils.getBinaryContent(url, (err, data) => {
             if (err) {
-                reject(err);
+                reject(err)
             } else {
-                resolve(data);
+                resolve(data)
             }
-        });
-    });
+        })
+    })
 }
