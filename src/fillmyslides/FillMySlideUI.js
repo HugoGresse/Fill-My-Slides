@@ -62,11 +62,10 @@ class FillMySlideUI extends Component {
         super(props)
 
         this.state = {
-            presentationId: "1AzIG-bWowPkFzIC4dA1Kbz3IpEWzizAMjhhZZIvgRoU",
+            presentationId: null,
             textShapes: [],
             imageShapes: []
         }
-        this.fetchSlides("1AzIG-bWowPkFzIC4dA1Kbz3IpEWzizAMjhhZZIvgRoU")
     }
 
     onPresentationLinkChange(e) {
