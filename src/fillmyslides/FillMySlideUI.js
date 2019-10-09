@@ -288,7 +288,7 @@ class FillMySlideUI extends Component {
                         </Typography>
                         <br/>
                         <Typography variant="caption">
-                            Images should be an http url
+                            Images should be an http(s) url
                         </Typography>
 
                         <TextField
