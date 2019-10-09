@@ -1,14 +1,16 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import Grid from "@material-ui/core/Grid"
 import TextField from "@material-ui/core/TextField"
 import Button from "@material-ui/core/Button"
 import gapi from '../gapi'
 import ShapeChooser from "./ShapeChooser"
 import withStyles from "@material-ui/core/styles/withStyles"
-import { Typography } from "@material-ui/core"
+import {Typography} from "@material-ui/core"
 import Paper from "@material-ui/core/Paper"
-import { generateScreenshots } from "./ScreenshotsProcess"
+import {generateScreenshots} from "./utils/ScreenshotsProcess"
 import CircularProgress from "@material-ui/core/CircularProgress"
+import getTextShape from "./utils/getTextShape";
+import getImageShape from "./utils/getImageShape";
 
 const styles = theme => ({
     card: {
@@ -61,7 +63,8 @@ class FillMySlideUI extends Component {
 
         this.state = {
             presentationId: null,
-            textShapes: []
+            textShapes: [],
+            imageShapes: []
         }
     }
 
@@ -78,7 +81,7 @@ class FillMySlideUI extends Component {
         const id = value.substring(
             value.lastIndexOf("presentation/d/") + "presentation/d/".length,
             value.lastIndexOf("/edit")
-        );
+        )
 
         this.setState({
             presentationId: id
@@ -100,7 +103,8 @@ class FillMySlideUI extends Component {
             this.setState({
                 slideTitle: response.result.title,
                 pageObjectId: firstSlide.objectId,
-                textShapes: this.getTextShape(firstSlide)
+                textShapes: getTextShape(firstSlide),
+                imageShapes: getImageShape(firstSlide)
             })
             this.getReferenceThumbnail(this.state.presentationId, firstSlide.objectId)
         }, (response) => {
@@ -128,27 +132,15 @@ class FillMySlideUI extends Component {
         })
     }
 
-    getTextShape = (slide) => {
-        return slide.pageElements.filter(e => {
-            if (!e.shape) return 0
-            return e.shape.shapeType === "TEXT_BOX"
-        }).map(pageElement => {
-            const text = pageElement.shape.text.textElements.reduce((acc, textElement) => {
-                if (!textElement.textRun || !textElement.textRun.content) return acc
-                acc += textElement.textRun.content
-                return acc
-            }, '')
-
-            return {
-                objectId: pageElement.objectId,
-                text: text
-            }
+    onSelectedTextShape(data) {
+        this.setState({
+            selectedTextShape: data
         })
     }
 
-    selectedShapes(data) {
+    onSelectedImageShape(data) {
         this.setState({
-            selectedShapes: data
+            selectedImageShape: data
         })
     }
 
@@ -173,9 +165,9 @@ class FillMySlideUI extends Component {
             })
             return
         }
-        if (!this.state.selectedShapes) {
+        if (!this.state.selectedTextShape && !this.state.selectedImageShape) {
             this.setState({
-                error: "No selected text to be replaced"
+                error: "No selected text/image to be replaced"
             })
             return
         }
@@ -186,7 +178,8 @@ class FillMySlideUI extends Component {
             state.presentationId,
             state.pageObjectId,
             state.replacementData,
-            state.selectedShapes,
+            state.selectedTextShape,
+            state.selectedImageShape,
             (progress) => {
                 this.setState({
                     progress: progress
@@ -246,7 +239,7 @@ class FillMySlideUI extends Component {
 
                     <Paper className={classes.card}>
                         <Typography>
-                            Select your text you want to replace
+                            Select the text/image you want to replace
                         </Typography>
                         <Typography variant="caption">
                             (the order you select them are important)
@@ -256,7 +249,10 @@ class FillMySlideUI extends Component {
                             <Grid item xs={6}>
                                 <ShapeChooser
                                     shapes={this.state.textShapes}
-                                    onShapeSelected={(selectedShapes) => this.selectedShapes(selectedShapes)}/>
+                                    onShapeSelected={(selectedTextShape) => this.onSelectedTextShape(selectedTextShape)}/>
+                                <ShapeChooser
+                                    shapes={this.state.imageShapes}
+                                    onShapeSelected={(selectedTextShape) => this.onSelectedImageShape(selectedTextShape)}/>
                             </Grid>
                             <Grid item xs={6}>
                                 {this.state.slideTitle && <div className={classes.previewContainer}>
@@ -289,6 +285,10 @@ class FillMySlideUI extends Component {
                                 "...": "..."
                             }], null, 4)}
                         </Typography>
+                        <br/>
+                        <Typography variant="caption">
+                            Images should be an http(s) url
+                        </Typography>
 
                         <TextField
                             id="replacementData"
@@ -314,7 +314,7 @@ class FillMySlideUI extends Component {
                 <Grid item xs={1} className={classes.numberContainer}>
                     <div className={classes.number}>4</div>
                 </Grid>
-                <Grid item xs={11} >
+                <Grid item xs={11}>
                     <Paper className={classes.card}>
                         <Grid container>
 
