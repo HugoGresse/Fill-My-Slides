@@ -9,7 +9,7 @@
   "dependencies": {
     "@material-ui/core": "^4.2.0",
     "file-saver": "^2.0.2",
-    "jszip": "^3.2.2",
+    "jszip": "^3.10.1",
     "jszip-utils": "^0.1.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
