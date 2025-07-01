@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "devDependencies": {
-    "react-scripts": "3.0.1"
+    "@vitejs/plugin-react": "^4.1.1",
+    "vite": "^5.1.6"
   },
   "dependencies": {
     "@material-ui/core": "^4.2.0",
@@ -15,10 +16,9 @@
     "react-router-dom": "^5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "deploy": "npm run build && firebase deploy"
   },
   "eslintConfig": {
